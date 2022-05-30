@@ -2,7 +2,6 @@ import webbrowser
 import dash
 from dash import html
 from dash import dcc
-import pandas as pd
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 import requests
