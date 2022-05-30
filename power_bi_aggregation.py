@@ -16,14 +16,44 @@ server=app.server
 app.layout = html.Div([
     html.Div([
         html.H3("Previous Table Name"),
-        dcc.Input(id='previous_table_name', value="#Pivoted Table"),
+        dcc.Input(id='previous_table_name', value="Pivoted Table"),
         html.H3("Group By Variable:"),
-        dcc.Input(id='group_by_variable', value="#ProjectID")
+        dcc.Input(id='group_by_variable', value="ProjectID")
+
+    ]),
+    html.Div([
+        html.H3("Columns"),
+        dcc.Input(id='first_input_area', placeholder="First Variable"),
+        dcc.Input(id='second_input_area', placeholder="Second Variable"),
+        dcc.Input(id='third_input_area', placeholder="Third Variable"),
+        dcc.Input(id='fourth_input_area', placeholder="Fourth Variable"),
+        dcc.Input(id='fifth_input_area', placeholder="Fifth Variable")
+    ]),
+    html.Div([
+        html.H2(id="final_output_string", children='No input yet')
 
     ])
 
 
 ])
+
+@app.callback(Output('final_output_string','children'),
+                [Input('previous_table_name', 'value')],
+                [Input('group_by_variable', 'value')],
+                [Input('first_input_area', 'value')],
+                [Input('second_input_area', 'value')],
+                [Input('third_input_area', 'value')],
+                [Input('fourth_input_area', 'value')],
+                [Input('fifth_input_area', 'value')])
+def update_final_string(previous_table_name,group_by_variable,first_input_area,second_input_area,third_input_area,fourth_input_area,fifth_input_area):
+    first_part = '=Table.Group(#\"'+previous_table_name+'", {"'+group_by_variable+'"},{'
+    data=[first_input_area,second_input_area,third_input_area,fourth_input_area,fifth_input_area]
+    col_list_string = ''
+    for datum in data:
+        if datum:
+            col_list_string+='{"'+datum+'", each List.First(List.RemoveNulls(['+datum+']))},'
+    col_list_string=col_list_string[:-1]
+    return first_part+col_list_string+'})'
 
 # app.layout = html.Div([
 #     html.Div([
