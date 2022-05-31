@@ -15,14 +15,15 @@ server=app.server
 
 app.layout = html.Div([
     html.Div([
-        html.H3("Previous Table Name"),
+        html.H1("Power BI Data Aggregation Query Builder"),
+        html.H3("Enter Previous Table Name:"),
         dcc.Input(id='previous_table_name', value="Pivoted Table"),
-        html.H3("Group By Variable:"),
+        html.H3("Enter Variable To Group By:"),
         dcc.Input(id='group_by_variable', value="ProjectID")
 
     ]),
     html.Div([
-        html.H3("Columns"),
+        html.H3("Enter Relevant Column Names Below:"),
         dcc.Input(id='first_input_area', placeholder="First Variable"),
         dcc.Input(id='second_input_area', placeholder="Second Variable"),
         dcc.Input(id='third_input_area', placeholder="Third Variable"),
@@ -55,7 +56,8 @@ app.layout = html.Div([
         dcc.Input(id='thirtieth_input_area', placeholder="Thirtieth Variable"),
     ]),
     html.Div([
-        html.H2(id="final_output_string", children='No input yet')
+        html.H2("Final Query Result:"),
+        html.H3(id="final_output_string", children='No input yet')
 
     ])
 
