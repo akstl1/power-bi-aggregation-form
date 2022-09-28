@@ -21,9 +21,7 @@ app.layout = html.Div([
         html.H3("Enter Variable To Group By:"),
         dcc.Input(id='group_by_variable', value="ProjectID"),
         html.H3("Enter First or Last:"),
-        dcc.Dropdown([{'label':'First','value':'First'},{'label':'Last','value':'Last'}],value="Last",id="first_last")
-
-    ],style={'width':'177px'}),
+        dcc.Dropdown([{'label':'First','value':'First'},{'label':'Last','value':'Last'}],value="Last",id="first_last",style={'width':'177px'})]),
     html.Div([
         html.H3("Enter Relevant Column Names Below:"),
         dcc.Input(id='first_input_area', placeholder="First Variable"),
