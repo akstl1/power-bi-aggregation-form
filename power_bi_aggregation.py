@@ -12,7 +12,7 @@ app = dash.Dash()
 server=app.server
 
 # create app layout
-
+app.title="PBI Data Aggregation"
 app.layout = html.Div([
     html.Div([
         html.H1("Power BI Data Aggregation Query Builder"),
