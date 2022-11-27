@@ -358,12 +358,17 @@ def parse_contents(contents, filename):
 
 @app.callback(Output('output-data-upload', 'children'),
               Input('upload-data', 'contents'),
-            #   [Input('previous_table_name', 'value')],
-            #   [Input('group_by_variable', 'value')],
-            #   [Input('first_last', 'value')],
+              [Input('previous_table_name', 'value')],
+              [Input('group_by_variable', 'value')],
+              [Input('first_last', 'value')],
               State('upload-data', 'filename'),
               )
-def update_output(list_of_contents, list_of_names):
+def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
+    print(list_of_contents,'list of contents')
+    print(list_of_names,'names')
+    print(prev_table,'prev')
+    print(group_by_table,'group_by_table')
+    print(first_last,'first_last')
     if list_of_contents is not None:
         children = [
             parse_contents(c, n) for c, n in
