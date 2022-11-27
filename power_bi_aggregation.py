@@ -19,7 +19,7 @@ app.layout = html.Div([
         dcc.Input(id='previous_table_name', value="Pivoted Table"),
         html.H3("Enter Variable To Group By:"),
         dcc.Input(id='group_by_variable', value="ProjectID"),
-        html.H3("Enter First or Last:"),
+        html.H3("Enter whether to keep First or Last value inputs:"),
         dcc.Dropdown([{'label':'First','value':'First'},{'label':'Last','value':'Last'}],value="Last",id="first_last",style={'width':'177px'})]),
     # html.Div([
     #     html.H3("Enter Relevant Column Names Below:"),
@@ -111,13 +111,62 @@ app.layout = html.Div([
     ),
     html.H2("Final Query Result:"),
     html.Div(id='output-data-upload'),
+    ])
 ])
 
+def parse_contents(contents, prev_table,group_by_table,first_last,filename):
+    content_type, content_string = contents.split(',')
+    print(prev_table,group_by_table,first_last)
+    decoded = base64.b64decode(content_string)
+    try:
+        if 'csv' in filename:
+            # Assume that the user uploaded a CSV file
+            df = pd.read_csv(
+                io.StringIO(decoded.decode('utf-8')))
+        elif 'xls' in filename:
+            # Assume that the user uploaded an excel file
+            df = pd.read_excel(io.BytesIO(decoded))
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+    first_part_of_query = '=Table.Group(#\"'+prev_table+'", {"'+group_by_table+'"},{'
+    column_list_string_query = ''
+    df2=df.to_dict()
+    column_name = list(df2.keys())[0]
+    for row in range(len(df)):
+        if row>=0:
+            datum = df2[column_name][row]
+            column_list_string_query+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
+    column_list_string_query=first_part_of_query+column_list_string_query[:-1]+'})'
+
+    return html.Div([
+        html.P(column_list_string_query),
+        html.Hr()
+    ])
+
+@app.callback(Output('output-data-upload', 'children'),
+              Input('upload-data', 'contents'),
+              [Input('previous_table_name', 'value')],
+              [Input('group_by_variable', 'value')],
+              [Input('first_last', 'value')],
+              State('upload-data', 'filename'),
+              )
+def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
+    if list_of_contents is not None:
+        
+        children = [
+            parse_contents(c,prev_table,group_by_table,first_last, n) for c, n in
+            zip(list_of_contents, list_of_names)]
+        return children
+
+if __name__=="__main__":
+    app.run_server()
 
 
 
 
-])
 
 # @app.callback(Output('final_output_string','children'),
 #                 [Input('previous_table_name', 'value')],
@@ -316,55 +365,3 @@ app.layout = html.Div([
 #             col_list_string+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
 #     col_list_string=col_list_string[:-1]
 #     return first_part+col_list_string+'})'
-
-
-def parse_contents(contents, prev_table,group_by_table,first_last,filename):
-    content_type, content_string = contents.split(',')
-    print(prev_table,group_by_table,first_last)
-    decoded = base64.b64decode(content_string)
-    try:
-        if 'csv' in filename:
-            # Assume that the user uploaded a CSV file
-            df = pd.read_csv(
-                io.StringIO(decoded.decode('utf-8')))
-        elif 'xls' in filename:
-            # Assume that the user uploaded an excel file
-            df = pd.read_excel(io.BytesIO(decoded))
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
-    first_part = '=Table.Group(#\"'+prev_table+'", {"'+group_by_table+'"},{'
-    col_list_string = ''
-    # print(df.to_dict())
-    df2=df.to_dict()
-    for row in range(len(df)):
-        # print(df2['Col1'][row])
-        if row>=0:
-            datum = df2['Col1'][row]
-            col_list_string+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
-    col_list_string=first_part+col_list_string[:-1]+'})'
-
-    return html.Div([
-        html.P(col_list_string),
-        html.Hr()
-    ])
-
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              [Input('previous_table_name', 'value')],
-              [Input('group_by_variable', 'value')],
-              [Input('first_last', 'value')],
-              State('upload-data', 'filename'),
-              )
-def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
-    if list_of_contents is not None:
-        
-        children = [
-            parse_contents(c,prev_table,group_by_table,first_last, n) for c, n in
-            zip(list_of_contents, list_of_names)]
-        return children
-
-if __name__=="__main__":
-    app.run_server()
