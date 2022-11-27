@@ -11,7 +11,7 @@ app = dash.Dash()
 server=app.server
 
 # create app layout
-app.title="PBI Data Aggregation"
+app.title="Query Builder"
 app.layout = html.Div([
     # create initial data inputs for query. Allow user to input previous table name, grouping var, and whether to keep first/last entries
     # all the above are needed in the final query
