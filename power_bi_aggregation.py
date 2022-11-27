@@ -322,11 +322,9 @@ def update_final_string(previous_table_name,
     return first_part+col_list_string+'})'
 
 
-
-
-def parse_contents(contents, filename):
+def parse_contents(contents, prev_table,group_by_table,first_last,filename):
     content_type, content_string = contents.split(',')
-
+    print(prev_table,group_by_table,first_last)
     decoded = base64.b64decode(content_string)
     try:
         if 'csv' in filename:
@@ -348,7 +346,7 @@ def parse_contents(contents, filename):
         # print(df2['Col1'][row])
         if row>=0:
             datum = df2['Col1'][row]
-            col_list_string+='{"'+datum+'", each List.'+'first_last'+'(List.RemoveNulls(['+datum+']))},'
+            col_list_string+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
     col_list_string=col_list_string[:-1]+'})'
 
     return html.Div([
@@ -364,14 +362,17 @@ def parse_contents(contents, filename):
               State('upload-data', 'filename'),
               )
 def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
-    print(list_of_contents,'list of contents')
-    print(list_of_names,'names')
-    print(prev_table,'prev')
-    print(group_by_table,'group_by_table')
-    print(first_last,'first_last')
+    # print(list_of_contents,'list of contents')
+    # print(list_of_names,'names')
+    # print(prev_table,'prev')
+    # print(group_by_table,'group_by_table')
+    # print(first_last,'first_last')
+
+    
     if list_of_contents is not None:
+        
         children = [
-            parse_contents(c, n) for c, n in
+            parse_contents(c,prev_table,group_by_table,first_last, n) for c, n in
             zip(list_of_contents, list_of_names)]
         return children
 
