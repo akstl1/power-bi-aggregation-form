@@ -1,14 +1,9 @@
-import webbrowser
 import dash
-from dash import html, dcc, dash_table
+from dash import html, dcc
 import pandas as pd
-import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
-import requests
 import plotly.express as px
-
 import base64
-import datetime
 import io
 
 
