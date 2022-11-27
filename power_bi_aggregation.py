@@ -1,12 +1,16 @@
 import webbrowser
 import dash
-from dash import html
-from dash import dcc
+from dash import html, dcc, dash_table
 import pandas as pd
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 import requests
 import plotly.express as px
+
+import base64
+import datetime
+import io
+
 
 app = dash.Dash()
 server=app.server
@@ -89,7 +93,32 @@ app.layout = html.Div([
         html.H2("Final Query Result:"),
         html.H3(id="final_output_string", children='No input yet')
 
-    ])
+    ]),
+    html.Div([
+    dcc.Upload(
+        id='upload-data',
+        children=html.Div([
+            'Drag and Drop or ',
+            html.A('Select Files')
+        ]),
+        style={
+            'width': '100%',
+            'height': '60px',
+            'lineHeight': '60px',
+            'borderWidth': '1px',
+            'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            'margin': '10px'
+        },
+        # Allow multiple files to be uploaded
+        multiple=True
+    ),
+    html.Div(id='output-data-upload'),
+])
+
+
+
 
 
 ])
@@ -292,86 +321,54 @@ def update_final_string(previous_table_name,
     col_list_string=col_list_string[:-1]
     return first_part+col_list_string+'})'
 
-# app.layout = html.Div([
-#     html.Div([
-#                 html.Hr(),
-#                 html.Div([dcc.Dropdown(id='pokemon-name',options=[{'label':i.capitalize(),'value':i} for i in poke_names_list], value='bulbasaur')],style={'width':'20%', 'margin-left':'auto','margin-right':'auto'}),
-#                 html.Div([html.H1(id='pokemon-name-id')], style={'text-align':'center'}),
-#                 html.Div([
-#                     html.Div([html.Img(id="pokemon-sprite")],style={'display':'inline-block', 'width':'20%','height':'300px', 'margin-right':'60px','margin-left':'80px', 'text-align':'center','vertical-align':'top' }),
-#                     html.Div([
-#                         html.Div([html.P(id='pokemon-description'),
-#                         html.Div([
-#                             html.Div([html.P(id='pokemon-height')]),
-#                             html.Div([html.P(id='pokemon-weight')])
-#                             ])
-#                             ]),
-#                             html.P(id='pokemon-ability'),
-#                             html.P(id='pokemon-type')], style={'display':'inline-block', 'width':'30%','height':'300px','background-color':'#30a7d7', 'vertical-align':'top', 'padding-left':'10px','padding-right':'10px', 'border-radius':'10px'}),
-#                             html.Div([dcc.Graph(id='graph')], style={'display':'inline-block','width':'30%', 'margin-left':'40px'})
-#
-#                     ], style={'height':'300px'})
-#
-#
-# ])
-# ], style={'background-color':'LightCyan', 'padding-bottom':'275px'})
-
-#create callback to get pokemon stats for above elements
-
-# @app.callback(Output('pokemon-name-id','children'),
-#               Output('pokemon-description','children'),
-#               Output('pokemon-ability','children'),
-#               Output('pokemon-type','children'),
-#               Output('pokemon-height','children'),
-#               Output('pokemon-weight','children'),
-#               Output('pokemon-sprite','src'),
-#               Output('pokemon-sprite','style'),
-#                 [Input('pokemon-name', 'value')])
 
 
-# def name_and_id(poke_input):
-#
-#     ## Pokemon Species Data Request
-#     pokemon_species_request = requests.get("https://pokeapi.co/api/v2/pokemon-species/"+str(poke_input)+"/")
-#     species_data = pokemon_species_request.json()
-#
-#     ## Pokemon  Table Data Request
-#     pokemon_request = requests.get("https://pokeapi.co/api/v2/pokemon/"+str(poke_input)+"/")
-#     pokemon_data = pokemon_request.json()
-#
-#     ## Name And Id callback_
-#     name=species_data['name'].capitalize()
-#     id=str(species_data['id'])
-#     while len(id)<3:
-#         id='0'+id
-#
-#     ## Description callback
-#     entry=species_data['flavor_text_entries'][0]['flavor_text'].replace('\x0c',' ')
-#
-#     ## Ability Data
-#     abilities_json=pokemon_data['abilities']
-#     abilities = []
-#     for ability in abilities_json:
-#         abilities.append(ability['ability']['name'].capitalize())
-#
-#     ## Types Data
-#     types_json=pokemon_data['types']
-#     types = []
-#     for type in types_json:
-#         types.append(type['type']['name'].capitalize())
-#
-#     ## Height Data
-#     height=pokemon_data['height']/10
-#
-#     ## Weight Data
-#     weight=pokemon_data['height']/10
-#
-#     ## Sprite Data_
-#     id=str(species_data['id'])
-#
-#     ## return statement
-#     return "{} #{}".format(name, id),"Description: {}".format(entry),"Abilities: "+', '.join(abilities),"Types: "+', '.join(types),"Height: {} m".format(height),"Weight: {} kg".format(weight),"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"+id+".png", {'width':'275px', 'text-align':'center'}
 
+def parse_contents(contents, filename):
+    content_type, content_string = contents.split(',')
+
+    decoded = base64.b64decode(content_string)
+    try:
+        if 'csv' in filename:
+            # Assume that the user uploaded a CSV file
+            df = pd.read_csv(
+                io.StringIO(decoded.decode('utf-8')))
+        elif 'xls' in filename:
+            # Assume that the user uploaded an excel file
+            df = pd.read_excel(io.BytesIO(decoded))
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+    col_list_string = ''
+    # print(df.to_dict())
+    df2=df.to_dict()
+    for row in range(len(df)):
+        # print(df2['Col1'][row])
+        if row>=0:
+            datum = df2['Col1'][row]
+            col_list_string+='{"'+datum+'", each List.'+'first_last'+'(List.RemoveNulls(['+datum+']))},'
+    col_list_string=col_list_string[:-1]+'})'
+
+    return html.Div([
+        html.P(col_list_string),
+        html.Hr()  # horizontal line
+    ])
+
+@app.callback(Output('output-data-upload', 'children'),
+              Input('upload-data', 'contents'),
+            #   [Input('previous_table_name', 'value')],
+            #   [Input('group_by_variable', 'value')],
+            #   [Input('first_last', 'value')],
+              State('upload-data', 'filename'),
+              )
+def update_output(list_of_contents, list_of_names):
+    if list_of_contents is not None:
+        children = [
+            parse_contents(c, n) for c, n in
+            zip(list_of_contents, list_of_names)]
+        return children
 
 if __name__=="__main__":
     app.run_server()
