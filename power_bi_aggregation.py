@@ -339,6 +339,7 @@ def parse_contents(contents, prev_table,group_by_table,first_last,filename):
         return html.Div([
             'There was an error processing this file.'
         ])
+    first_part = '=Table.Group(#\"'+prev_table+'", {"'+group_by_table+'"},{'
     col_list_string = ''
     # print(df.to_dict())
     df2=df.to_dict()
@@ -347,11 +348,11 @@ def parse_contents(contents, prev_table,group_by_table,first_last,filename):
         if row>=0:
             datum = df2['Col1'][row]
             col_list_string+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
-    col_list_string=col_list_string[:-1]+'})'
+    col_list_string=first_part+col_list_string[:-1]+'})'
 
     return html.Div([
         html.P(col_list_string),
-        html.Hr()  # horizontal line
+        html.Hr()
     ])
 
 @app.callback(Output('output-data-upload', 'children'),
@@ -362,13 +363,6 @@ def parse_contents(contents, prev_table,group_by_table,first_last,filename):
               State('upload-data', 'filename'),
               )
 def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
-    # print(list_of_contents,'list of contents')
-    # print(list_of_names,'names')
-    # print(prev_table,'prev')
-    # print(group_by_table,'group_by_table')
-    # print(first_last,'first_last')
-
-    
     if list_of_contents is not None:
         
         children = [
