@@ -2,3 +2,11 @@ A {
     color: blue;
     text-decoration: underline;
 }
+
+A:hover {
+    cursor: pointer;
+}
+
+#upload-data {
+    width: 30%;
+}

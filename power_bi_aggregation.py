@@ -22,7 +22,9 @@ app.layout = html.Div([
         html.H3("Enter Variable To Group By:"),
         dcc.Input(id='group_by_variable', value="ProjectID"),
         html.H3("Enter whether to keep First or Last value inputs:"),
-        dcc.Dropdown([{'label':'First','value':'First'},{'label':'Last','value':'Last'}],value="Last",id="first_last",style={'width':'177px'})]),
+        dcc.Dropdown([{'label':'First','value':'First'},{'label':'Last','value':'Last'}],value="Last",id="first_last",style={'width':'177px'}),
+        html.H3("Enter whether to add an Index to re-named field:"),
+        dcc.Dropdown([{'label':'Yes','value':'Yes'},{'label':'No','value':'No'}],value='Yes',id="name_index",style={'width':'177px'})]),
     # section to upload an excel or csv file with column names to include in the query
     html.Div([
     dcc.Upload(
@@ -53,7 +55,7 @@ app.layout = html.Div([
 # function, from plotly docs, that will read in data
 # added in sections after the exception block where the query itself is built out
 # used within the update_output function below
-def parse_contents(contents, prev_table,group_by_table,first_last,filename):
+def parse_contents(contents, prev_table,group_by_table,first_last,name_index,filename):
     content_type, content_string = contents.split(',')
     print(prev_table,group_by_table,first_last)
     decoded = base64.b64decode(content_string)
@@ -80,8 +82,13 @@ def parse_contents(contents, prev_table,group_by_table,first_last,filename):
     #for loop to go through each row of the data, transform it to be in the right format for the query, and append to the query string
     for row in range(len(df)):
         if row>=0:
-            datum = df2[column_name][row]
-            column_list_string_query+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
+            if name_index=='Yes':
+
+                datum = df2[column_name][row]
+                column_list_string_query+='{"'+str(row+1)+'_'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
+            else:
+                datum = df2[column_name][row]
+                column_list_string_query+='{"'+datum+'", each List.'+first_last+'(List.RemoveNulls(['+datum+']))},'
     # combining all portions of the query
     column_list_string_query=first_part_of_query+column_list_string_query[:-1]+'})'
 
@@ -98,12 +105,13 @@ def parse_contents(contents, prev_table,group_by_table,first_last,filename):
               [Input('previous_table_name', 'value')],
               [Input('group_by_variable', 'value')],
               [Input('first_last', 'value')],
+              [Input('name_index', 'value')],
               State('upload-data', 'filename'),
               )
-def update_output(list_of_contents, prev_table,group_by_table,first_last,list_of_names):
+def update_output(list_of_contents, prev_table,group_by_table,first_last,name_index,list_of_names):
     if list_of_contents is not None:
         children = [
-            parse_contents(c,prev_table,group_by_table,first_last, n) for c, n in
+            parse_contents(c,prev_table,group_by_table,first_last,name_index, n) for c, n in
             zip(list_of_contents, list_of_names)]
         return children
 
